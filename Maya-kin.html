@@ -1,10 +1,145 @@
-🌀 マヤ暦 KIN 検索
-生年月日からKIN・音響・紋章を調べます
-生年月日を選んでください
-年
-
-月
-
-日
-
-検索する
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="マヤ暦KIN">
+  <title>マヤ暦 KIN 検索</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif; background: #f5f5f7; color: #1c1c1e; min-height: 100vh; }
+    header { background: #fff; border-bottom: 0.5px solid #e0e0e0; padding: 20px 20px 16px; }
+    header h1 { font-size: 22px; font-weight: 600; }
+    header p { font-size: 14px; color: #6e6e73; margin-top: 4px; }
+    .main { padding: 20px; max-width: 500px; margin: 0 auto; }
+    .card { background: #fff; border-radius: 16px; padding: 20px; margin-bottom: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+    .card label { display: block; font-size: 13px; color: #6e6e73; margin-bottom: 10px; font-weight: 500; }
+    .date-row { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 8px; }
+    .date-col { display: flex; flex-direction: column; gap: 4px; }
+    .date-col span { font-size: 12px; color: #6e6e73; text-align: center; }
+    select { width: 100%; padding: 12px 6px; border: 0.5px solid #d1d1d6; border-radius: 10px; font-size: 16px; background: #f5f5f7; color: #1c1c1e; outline: none; appearance: none; -webkit-appearance: none; text-align: center; }
+    select:focus { border-color: #007aff; background: #fff; }
+    button { width: 100%; padding: 15px; background: #007aff; color: #fff; border: none; border-radius: 12px; font-size: 17px; font-weight: 600; cursor: pointer; margin-top: 4px; }
+    button:active { background: #0062cc; }
+    .result { display: none; }
+    .result.show { display: block; }
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+    .metric { background: #f5f5f7; border-radius: 12px; padding: 16px; text-align: center; }
+    .metric-label { font-size: 13px; color: #6e6e73; margin-bottom: 6px; }
+    .metric-value-lg { font-size: 42px; font-weight: 700; color: #1c1c1e; line-height: 1; }
+    .metric-value-md { font-size: 24px; font-weight: 700; color: #1c1c1e; }
+    .error { color: #ff3b30; font-size: 14px; margin-top: 10px; display: none; text-align: center; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🌀 マヤ暦 KIN 検索</h1>
+    <p>生年月日からKIN・音響・紋章を調べます</p>
+  </header>
+  <div class="main">
+    <div class="card">
+      <label>生年月日を選んでください</label>
+      <div class="date-row">
+        <div class="date-col"><span>年</span><select id="sel-year"></select></div>
+        <div class="date-col"><span>月</span><select id="sel-month"></select></div>
+        <div class="date-col"><span>日</span><select id="sel-day"></select></div>
+      </div>
+      <p class="error" id="error-msg"></p>
+    </div>
+    <button onclick="calculate()">検索する</button>
+    <div class="result" id="result">
+      <div class="card" style="margin-top:16px;">
+        <div class="grid2">
+          <div class="metric">
+            <div class="metric-label">KINナンバー</div>
+            <div class="metric-value-lg" id="res-kin">—</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">音響</div>
+            <div class="metric-value-lg" id="res-tone">—</div>
+          </div>
+        </div>
+        <div class="grid2">
+          <div class="metric">
+            <div class="metric-label">紋章（1次元）</div>
+            <div class="metric-value-md" id="res-seal1">—</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">紋章（2次元）</div>
+            <div class="metric-value-md" id="res-seal2">—</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    const SEAL_NAMES = ["","赤龍","白風","青夜","黄種","赤蛇","白世","青手","黄星","赤月","白犬","青猿","黄人","赤空","白魔","青鷲","黄戦","赤地","白鏡","青嵐","黄太"];
+    function getSeal1(kin) { return SEAL_NAMES[((kin-1)%20)+1]; }
+    function getSeal2(kin) {
+      const groupStart = Math.floor((kin-1)/13)*13+1;
+      return SEAL_NAMES[((groupStart-1)%20)+1];
+    }
+    const YEAR_KIN = {
+      1857:164,1858:9,1859:114,1860:219,1861:64,1862:169,1863:14,1864:119,
+      1865:224,1866:69,1867:174,1868:19,1869:124,1870:229,1871:74,1872:179,
+      1873:24,1874:129,1875:234,1876:79,1877:184,1878:29,1879:134,1880:239,
+      1881:84,1882:189,1883:34,1884:139,1885:244,1886:89,1887:194,1888:39,
+      1889:144,1890:249,1891:94,1892:199,1893:44,1894:149,1895:254,1896:99,
+      1897:204,1898:49,1899:154,1900:259,1901:104,1902:209,1903:54,1904:159,
+      1905:4,1906:109,1907:214,1908:59,1909:8,1910:9,1911:114,1912:219,
+      1913:64,1914:169,1915:14,1916:119,1917:224,1918:69,1919:174,1920:19,
+      1921:124,1922:229,1923:74,1924:179,1925:24,1926:129,1927:234,1928:79,
+      1929:184,1930:29,1931:134,1932:239,1933:84,1934:189,1935:34,1936:139,
+      1937:244,1938:89,1939:194,1940:39,1941:144,1942:249,1943:94,1944:199,
+      1945:44,1946:149,1947:254,1948:99,1949:204,1950:49,1951:154,1952:259,
+      1953:104,1954:209,1955:54,1956:159,1957:4,1958:109,1959:214,1960:59,
+      1961:164,1962:9,1963:114,1964:219,1965:64,1966:169,1967:14,1968:119,
+      1969:224,1970:69,1971:174,1972:19,1973:124,1974:229,1975:74,1976:179,
+      1977:24,1978:129,1979:234,1980:79,1981:184,1982:29,1983:134,1984:239,
+      1985:84,1986:189,1987:34,1988:139,1989:244,1990:89,1991:194,1992:39,
+      1993:144,1994:249,1995:94,1996:199,1997:44,1998:149,1999:254,2000:99,
+      2001:204,2002:49,2003:154,2004:259,2005:104,2006:209,2007:54,2008:159,
+      2009:4,2010:109,2011:214,2012:59,2013:164,2014:9,2015:114,2016:219,
+      2017:64,2018:169,2019:14,2020:119,2021:224,2022:69,2023:174,2024:19,
+      2025:124,2026:229,2027:74,2028:179,2029:234,2030:79,2031:134,2032:239,
+      2033:84,2034:189,2035:34,2036:139,2037:244,2038:89,2039:194,2040:39,
+      2041:144,2042:249,2043:94,2044:199,2045:44,2046:149,2047:254,2048:99,
+      2049:204,2050:49,2051:154,2052:259,2053:104,2054:209,2055:54,2056:159,
+      2057:4,2058:109,2059:214,2060:59
+    };
+    const selYear = document.getElementById('sel-year');
+    for (let y=1857;y<=2060;y++){const o=document.createElement('option');o.value=y;o.textContent=y+'年';if(y===1970)o.selected=true;selYear.appendChild(o);}
+    const selMonth = document.getElementById('sel-month');
+    for (let m=1;m<=12;m++){const o=document.createElement('option');o.value=m;o.textContent=m+'月';selMonth.appendChild(o);}
+    const selDay = document.getElementById('sel-day');
+    function updateDays(){
+      const y=parseInt(selYear.value),m=parseInt(selMonth.value);
+      const maxDay=new Date(y,m,0).getDate(),cur=parseInt(selDay.value)||1;
+      selDay.innerHTML='';
+      for(let d=1;d<=maxDay;d++){const o=document.createElement('option');o.value=d;o.textContent=d+'日';if(d===cur)o.selected=true;selDay.appendChild(o);}
+    }
+    updateDays();
+    selYear.addEventListener('change',updateDays);
+    selMonth.addEventListener('change',updateDays);
+    function toJulianDay(y,m,d){const a=Math.floor((14-m)/12),yy=y+4800-a,mm=m+12*a-3;return d+Math.floor((153*mm+2)/5)+365*yy+Math.floor(yy/4)-Math.floor(yy/100)+Math.floor(yy/400)-32045;}
+    function calculate(){
+      const y=parseInt(selYear.value),m=parseInt(selMonth.value),d=parseInt(selDay.value);
+      const err=document.getElementById('error-msg'),result=document.getElementById('result');
+      err.style.display='none';result.classList.remove('show');
+      let mayaYear=y;
+      if(m<7||(m===7&&d<26))mayaYear=y-1;
+      if(!YEAR_KIN[mayaYear]){err.textContent='対応範囲外です';err.style.display='block';return;}
+      const baseKin=YEAR_KIN[mayaYear],baseJD=toJulianDay(mayaYear,7,26),targetJD=toJulianDay(y,m,d),diff=targetJD-baseJD;
+      let kin=((baseKin-1+diff)%260)+1;
+      let tone=kin%13;if(tone===0)tone=13;
+      document.getElementById('res-kin').textContent=kin;
+      document.getElementById('res-tone').textContent=tone;
+      document.getElementById('res-seal1').textContent=getSeal1(kin);
+      document.getElementById('res-seal2').textContent=getSeal2(kin);
+      result.classList.add('show');
+    }
+  </script>
+</body>
+</html>
