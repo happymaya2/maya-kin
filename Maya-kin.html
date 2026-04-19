@@ -132,7 +132,7 @@
       if(m<7||(m===7&&d<26))mayaYear=y-1;
       if(!YEAR_KIN[mayaYear]){err.textContent='対応範囲外です';err.style.display='block';return;}
       const baseKin=YEAR_KIN[mayaYear],baseJD=toJulianDay(mayaYear,7,26),targetJD=toJulianDay(y,m,d),diff=targetJD-baseJD;
-      let kin=((baseKin-1+diff-1)%260)+1;
+      let kin=((baseKin-1+diff)%260)+1;
       let tone=kin%13;if(tone===0)tone=13;
       document.getElementById('res-kin').textContent=kin;
       document.getElementById('res-tone').textContent=tone;
